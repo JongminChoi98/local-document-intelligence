@@ -40,3 +40,11 @@ Initial project setup.
 Confidential documents, credentials, model weights,
 and generated document indexes must not be committed
 to this repository.
+
+## Setup Guides
+
+- [Ollama Environment Setup](docs/ollama-setup.md)
+
+## Configuration
+
+- [Ollama systemd Override](config/ollama/override.conf)
