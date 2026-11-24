@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Local documents and generated data
+/data/
+/documents/
+/storage/
+
+# Model files
+/models/
+*.gguf
+*.safetensors
+
+# Logs
+*.log
+/logs/
+
+# IDE
+.vscode/
+.idea/
+
+# Operating system
+.DS_Store
+Thumbs.db
