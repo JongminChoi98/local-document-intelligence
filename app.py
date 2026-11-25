@@ -1,6 +1,6 @@
 import streamlit as st
 
-from rag.pipeline import ask
+from rag.conversation import ask_conversation
 from vector_store.source_files import get_source_file
 from ingestion.pipeline import ingest_excel
 from llm.ollama import LLM_MODEL
@@ -60,7 +60,13 @@ def render_answer(result: dict, message_key: int):
                 st.text(f"유사도: {item['similarity']:.4f}")
                 st.divider()
 
+    rewritten = result.get("rewritten_question")
+
+    if rewritten and rewritten != result["question"]:
+        st.caption(f"재구성된 검색 질문: {rewritten}")
+
     st.caption(
+        f"질문 재구성: {result.get('rewrite_seconds', 0):.2f}초 | "
         f"검색: {result['retrieval_seconds']:.2f}초 | "
         f"생성: {result['generation_seconds']:.2f}초 | "
         f"전체: {result['total_seconds']:.2f}초"
@@ -244,7 +250,11 @@ if question and question.strip():
     with st.chat_message("assistant"):
         with st.spinner("정비 기록 검색 및 답변 생성 중..."):
             try:
-                result = ask(question, top_k=3)
+                result = ask_conversation(
+                    question,
+                    st.session_state.messages[:-1],
+                    top_k=3,
+                )
 
             except Exception as error:
                 st.error(
