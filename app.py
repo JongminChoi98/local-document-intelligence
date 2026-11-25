@@ -1,6 +1,7 @@
 import streamlit as st
 
 from rag.pipeline import ask
+from vector_store.source_files import get_source_file
 from ingestion.pipeline import ingest_excel
 from llm.ollama import LLM_MODEL
 from embeddings.ollama import EMBEDDING_MODEL
@@ -17,7 +18,29 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 
-def render_answer(result: dict):
+def render_download(source_file: str, key: str):
+    try:
+        file_path = get_source_file(source_file)
+        content = file_path.read_bytes()
+
+    except (ValueError, OSError):
+        st.caption("원본 파일을 사용할 수 없습니다.")
+        return
+
+    st.download_button(
+        label="원본 Excel 다운로드",
+        data=content,
+        file_name=file_path.name,
+        mime=(
+            "application/vnd.openxmlformats-officedocument"
+            ".spreadsheetml.sheet"
+        ),
+        key=key,
+        on_click="ignore",
+    )
+
+
+def render_answer(result: dict, message_key: int):
     st.markdown(result["answer"])
 
     if result["sources"]:
@@ -27,7 +50,12 @@ def render_answer(result: dict):
                     f"{item['reference']} "
                     f"{item['document_id']}"
                 )
-                st.text(f"파일: {item['source']['file']}")
+                source_file = item["source"]["file"]
+                st.text(f"파일: {source_file.rsplit('/', 1)[-1]}")
+                render_download(
+                    source_file,
+                    key=f"answer_{message_key}_{item['reference']}",
+                )
                 st.text(f"시트: {item['source']['sheet']}")
                 st.text(f"유사도: {item['similarity']:.4f}")
                 st.divider()
@@ -138,6 +166,10 @@ with st.sidebar:
             for document in documents:
                 st.text(document["document_id"])
                 st.caption(document["filename"].rsplit("/", 1)[-1])
+                render_download(
+                    document["filename"],
+                    key=f"library_{document['document_id']}",
+                )
                 st.divider()
 
             selected_id = st.selectbox(
@@ -187,12 +219,12 @@ st.caption(
     "관련 문서를 근거로 답변합니다."
 )
 
-for message in st.session_state.messages:
+for index, message in enumerate(st.session_state.messages):
     with st.chat_message(message["role"]):
         if message["role"] == "user":
             st.text(message["content"])
         else:
-            render_answer(message["result"])
+            render_answer(message["result"], index)
 
 
 question = st.chat_input(
@@ -221,7 +253,7 @@ if question and question.strip():
                 )
 
             else:
-                render_answer(result)
+                render_answer(result, len(st.session_state.messages))
 
                 st.session_state.messages.append({
                     "role": "assistant",
