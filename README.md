@@ -8,6 +8,49 @@ built with Python, Ollama, ChromaDB, SQLite, and Streamlit.
 Version: v0.1.0
 Status: MVP / Local Prototype
 
+## Start Here — Codex Onboarding
+
+New to this project? Clone the repository, open the project
+folder in Codex, and run the onboarding prompt below.
+
+프로젝트를 처음 인수받은 개발자는 Codex에서
+다음 프롬프트를 실행하는 것을 권장합니다.
+
+### Copy and Paste into Codex
+
+```text
+나는 이 프로젝트를 처음 인수받은 개발자야.
+
+AGENTS.md와 prompts/PROJECT_ONBOARDING.md를 읽고
+프로젝트 온보딩 분석을 수행해 줘.
+
+실제 소스 코드, Git 이력, 프로젝트 문서 및
+현재 PC의 개발 환경을 확인해 줘.
+
+프로젝트의 목적, 기술 구조, 구현 완료 사항,
+미구현 사항, 미검증 사항 및 향후 개발 방향을
+파악하고 내가 무엇부터 해야 하는지 알려줘.
+
+이번 단계에서는 파일 수정, 패키지 설치,
+환경 변경 및 QA 테스트를 수행하지 말고
+읽기 전용 분석과 보고만 진행해 줘.
+```
+
+### Onboarding Resources
+
+- [Agent Instructions](AGENTS.md)
+- [Project Onboarding Prompt](prompts/PROJECT_ONBOARDING.md)
+
+Recommended workflow:
+
+1. Project onboarding and environment inspection
+2. Developer setup and first application execution
+3. Integration QA with Codex
+4. Defect resolution and further development
+
+Onboarding does not automatically install dependencies,
+modify source code, or execute integration tests.
+
 ## Developer Documentation
 
 Start here if you are new to this project.
