@@ -1,4 +1,5 @@
 import argparse
+from llm.settings import GenerationSettings
 import json
 from urllib.request import Request, urlopen
 
@@ -9,21 +10,24 @@ LLM_MODEL = "qwen3.5:4b-q4_K_M"
 
 def generate_answer(
     messages: list[dict],
+    settings: GenerationSettings = GenerationSettings(),
 ) -> dict:
     if not messages:
         raise ValueError("Messages must not be empty.")
 
     payload = {
-        "model": LLM_MODEL,
+        "model": settings.model,
         "messages": messages,
         "stream": False,
-        "think": False,
         "options": {
-            "num_ctx": 16384,
-            "temperature": 0.1,
-            "num_predict": 1024,
+            "num_ctx": settings.num_ctx,
+            "temperature": settings.temperature,
+            "num_predict": settings.num_predict,
         },
     }
+
+    if settings.think is not None:
+        payload["think"] = settings.think
 
     request = Request(
         f"{OLLAMA_URL}/api/chat",

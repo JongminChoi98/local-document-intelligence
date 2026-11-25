@@ -1,6 +1,7 @@
 from time import perf_counter
 
 from llm.ollama import generate_answer
+from llm.settings import GenerationSettings
 from rag.pipeline import ask
 
 
@@ -24,7 +25,11 @@ REWRITE_PROMPT = """
 """.strip()
 
 
-def rewrite_question(question: str, history: list[dict]) -> str:
+def rewrite_question(
+    question: str,
+    history: list[dict],
+    settings: GenerationSettings = GenerationSettings(),
+) -> str:
     if not history:
         return question
 
@@ -65,7 +70,7 @@ def rewrite_question(question: str, history: list[dict]) -> str:
         },
     ]
 
-    result = generate_answer(messages)
+    result = generate_answer(messages, settings)
 
     return result["answer"].strip()
 
@@ -74,13 +79,14 @@ def ask_conversation(
     question: str,
     history: list[dict],
     top_k: int = 3,
+    settings: GenerationSettings = GenerationSettings(),
 ) -> dict:
     started = perf_counter()
 
-    rewritten = rewrite_question(question, history)
+    rewritten = rewrite_question(question, history, settings)
     rewrite_seconds = perf_counter() - started
 
-    result = ask(rewritten, top_k=top_k)
+    result = ask(rewritten, top_k=top_k, settings=settings)
 
     result["question"] = question
     result["rewritten_question"] = rewritten

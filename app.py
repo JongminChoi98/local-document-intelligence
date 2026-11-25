@@ -13,7 +13,11 @@ from chat_store import (
 from rag.conversation import ask_conversation
 from vector_store.source_files import get_source_file
 from ingestion.pipeline import ingest_excel
-from llm.ollama import LLM_MODEL
+from llm.settings import (
+    DEFAULT_MODEL,
+    GenerationSettings,
+    list_generation_models,
+)
 from embeddings.ollama import EMBEDDING_MODEL
 from vector_store.chroma import get_collection
 from vector_store.management import list_documents, delete_document
@@ -93,6 +97,11 @@ def render_chat_manager():
             st.rerun()
 
 
+@st.cache_data(ttl=30)
+def available_models():
+    return list_generation_models()
+
+
 def render_download(source_file: str, key: str):
     try:
         file_path = get_source_file(source_file)
@@ -117,6 +126,12 @@ def render_download(source_file: str, key: str):
 
 def render_answer(result: dict, message_key: int):
     st.markdown(result["answer"])
+
+    if result.get("model"):
+        st.caption(f"Model: {result['model']}")
+
+    if result.get("done_reason") == "length":
+        st.warning("생성 길이 제한에 도달했습니다.")
 
     if result["sources"]:
         with st.expander("참조 문서"):
@@ -159,8 +174,76 @@ with st.sidebar:
     st.divider()
     st.subheader("시스템 정보")
 
-    st.caption("LLM")
-    st.code(LLM_MODEL)
+    st.subheader("LLM 설정")
+
+    try:
+        models = available_models()
+    except Exception:
+        st.error("Ollama 모델 목록을 조회할 수 없습니다.")
+        st.stop()
+
+    if not models:
+        st.error("사용 가능한 생성 모델이 없습니다.")
+        st.stop()
+
+    names = list(models)
+
+    selected_model = st.selectbox(
+        "생성 모델",
+        options=names,
+        index=(
+            names.index(DEFAULT_MODEL)
+            if DEFAULT_MODEL in names else 0
+        ),
+    )
+
+    think = None
+
+    if "thinking" in models[selected_model]:
+        if selected_model == DEFAULT_MODEL:
+            think = st.checkbox(
+                "Thinking 활성화", value=False
+            )
+        else:
+            think = st.selectbox(
+                "Thinking",
+                options=[None, False, True],
+                format_func=lambda value: {
+                    None: "모델 기본값",
+                    False: "OFF",
+                    True: "ON",
+                }[value],
+                key=f"thinking_{selected_model}",
+            )
+
+    with st.expander("고급 추론 설정"):
+        num_ctx = st.selectbox(
+            "Context Window",
+            options=[4096, 8192, 16384],
+            index=2,
+        )
+
+        temperature = st.slider(
+            "Temperature",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.1,
+            step=0.1,
+        )
+
+        num_predict = st.selectbox(
+            "Max Output Tokens",
+            options=[512, 1024, 2048],
+            index=1,
+        )
+
+    generation_settings = GenerationSettings(
+        model=selected_model,
+        think=think,
+        num_ctx=num_ctx,
+        temperature=temperature,
+        num_predict=num_predict,
+    )
 
     st.caption("Embedding Model")
     st.code(EMBEDDING_MODEL)
@@ -339,6 +422,7 @@ if question and question.strip():
                     question,
                     st.session_state.messages[:-1],
                     top_k=3,
+                    settings=generation_settings,
                 )
 
             except Exception as error:

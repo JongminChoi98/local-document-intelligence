@@ -4,6 +4,7 @@ from time import perf_counter
 
 from retrieval.hybrid import search_hybrid
 from llm.ollama import generate_answer
+from llm.settings import GenerationSettings
 
 
 SYSTEM_PROMPT = """
@@ -53,7 +54,11 @@ def build_messages(
     ]
 
 
-def ask(question: str, top_k: int = 3) -> dict:
+def ask(
+    question: str,
+    top_k: int = 3,
+    settings: GenerationSettings = GenerationSettings(),
+) -> dict:
     started = perf_counter()
 
     documents = search_hybrid(question, top_k)
@@ -71,7 +76,7 @@ def ask(question: str, top_k: int = 3) -> dict:
         }
 
     messages = build_messages(question, documents)
-    result = generate_answer(messages)
+    result = generate_answer(messages, settings)
 
     sources = [
         {
