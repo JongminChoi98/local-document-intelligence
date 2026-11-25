@@ -33,7 +33,7 @@ using open-source language models.
 
 ## Project Status
 
-Initial project setup.
+Local LLM and Open WebUI integration validated. RAG development is pending.
 
 ## Data Privacy
 
@@ -44,11 +44,27 @@ to this repository.
 ## Setup Guides
 
 - [Ollama Environment Setup](docs/ollama-setup.md)
+- [Open WebUI Environment Setup](docs/open-webui-setup.md)
 
 ## Configuration
 
 - [Ollama systemd Override](config/ollama/override.conf)
+- [Open WebUI Environment Template](config/open-webui/.env.example)
 
 ## Validation
 
 - [Local LLM Validation](docs/local-llm-validation.md)
+
+## Quick Start
+
+Ensure the Ollama service is running:
+
+    systemctl is-active ollama
+
+Start Open WebUI:
+
+    ./scripts/start-open-webui.sh
+
+Open http://localhost:8080 in a browser.
+
+See the setup guides for installation prerequisites.

@@ -50,6 +50,7 @@ Environment variables:
 
 - OLLAMA_NO_CLOUD=1
 - OLLAMA_HOST=127.0.0.1:11434
+- OLLAMA_CONTEXT_LENGTH=8192
 
 Apply the configuration from the repository root:
 
