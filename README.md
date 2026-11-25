@@ -48,3 +48,7 @@ to this repository.
 ## Configuration
 
 - [Ollama systemd Override](config/ollama/override.conf)
+
+## Validation
+
+- [Local LLM Validation](docs/local-llm-validation.md)
