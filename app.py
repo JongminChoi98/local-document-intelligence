@@ -5,6 +5,7 @@ from ingestion.pipeline import ingest_excel
 from llm.ollama import LLM_MODEL
 from embeddings.ollama import EMBEDDING_MODEL
 from vector_store.chroma import get_collection
+from vector_store.management import list_documents, delete_document
 
 
 st.set_page_config(
@@ -120,6 +121,58 @@ with st.sidebar:
     )
 
     st.divider()
+
+
+    with st.expander("등록 문서 관리"):
+        notice = st.session_state.pop("delete_notice", None)
+
+        if notice:
+            st.success(notice)
+
+        documents = list_documents()
+
+        if not documents:
+            st.info("등록된 문서가 없습니다.")
+
+        else:
+            for document in documents:
+                st.text(document["document_id"])
+                st.caption(document["filename"].rsplit("/", 1)[-1])
+                st.divider()
+
+            selected_id = st.selectbox(
+                "삭제할 문서",
+                options=[
+                    document["document_id"]
+                    for document in documents
+                ],
+                index=None,
+                placeholder="문서를 선택하세요.",
+            )
+
+            if selected_id:
+                confirmed = st.checkbox(
+                    "검색 대상에서 삭제하는 데 동의합니다.",
+                    key=f"confirm_delete_{selected_id}",
+                )
+
+                if st.button(
+                    "선택 문서 삭제",
+                    disabled=not confirmed,
+                ):
+                    try:
+                        delete_document(selected_id)
+
+                    except Exception as error:
+                        st.error(
+                            f"삭제 실패: {type(error).__name__}"
+                        )
+
+                    else:
+                        st.session_state.delete_notice = (
+                            f"삭제 완료: {selected_id}"
+                        )
+                        st.rerun()
 
     if st.button("채팅 초기화"):
         st.session_state.messages = []
