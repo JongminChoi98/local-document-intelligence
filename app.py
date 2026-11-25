@@ -1,5 +1,15 @@
 import streamlit as st
 
+from chat_store import (
+    init_db,
+    create_chat,
+    list_chats,
+    load_messages,
+    append_message,
+    rename_chat,
+    delete_chat,
+)
+
 from rag.conversation import ask_conversation
 from vector_store.source_files import get_source_file
 from ingestion.pipeline import ingest_excel
@@ -14,8 +24,73 @@ st.set_page_config(
     layout="wide",
 )
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+init_db()
+
+chats = list_chats()
+chat_ids = [chat["id"] for chat in chats]
+
+if st.session_state.get("chat_id") not in chat_ids:
+    st.session_state.chat_id = (
+        chat_ids[0] if chat_ids else create_chat()
+    )
+
+st.session_state.messages = load_messages(
+    st.session_state.chat_id
+)
+
+
+def select_chat():
+    st.session_state.chat_id = st.session_state.chat_picker
+
+
+def render_chat_manager():
+    if st.button("새 채팅"):
+        st.session_state.chat_id = create_chat()
+        st.rerun()
+
+    chats = list_chats()
+    titles = {chat["id"]: chat["title"] for chat in chats}
+
+    chat_id = st.session_state.chat_id
+    st.session_state.chat_picker = chat_id
+
+    st.selectbox(
+        "채팅 목록",
+        options=list(titles),
+        format_func=lambda value: titles[value],
+        key="chat_picker",
+        on_change=select_chat,
+    )
+
+    with st.expander("현재 채팅 관리"):
+        title = st.text_input(
+            "채팅 제목",
+            value=titles[chat_id],
+            key=f"title_{chat_id}_{titles[chat_id]}",
+        )
+
+        if st.button("제목 변경"):
+            if title.strip():
+                rename_chat(chat_id, title)
+                st.rerun()
+            else:
+                st.warning("제목을 입력하세요.")
+
+        confirmed = st.checkbox(
+            "현재 채팅 삭제에 동의합니다.",
+            key=f"delete_chat_{chat_id}",
+        )
+
+        if st.button("채팅 삭제", disabled=not confirmed):
+            delete_chat(chat_id)
+
+            remaining = list_chats()
+            st.session_state.chat_id = (
+                remaining[0]["id"]
+                if remaining else create_chat()
+            )
+
+            st.rerun()
 
 
 def render_download(source_file: str, key: str):
@@ -76,6 +151,10 @@ def render_answer(result: dict, message_key: int):
 with st.sidebar:
     st.header("A/S Intelligence")
     st.caption("Local Document Intelligence")
+
+    st.divider()
+    st.subheader("채팅 관리")
+    render_chat_manager()
 
     st.divider()
     st.subheader("시스템 정보")
@@ -212,8 +291,7 @@ with st.sidebar:
                         )
                         st.rerun()
 
-    if st.button("채팅 초기화"):
-        st.session_state.messages = []
+
 
     st.caption("Local RAG Prototype v0.1.0")
 
@@ -239,10 +317,17 @@ question = st.chat_input(
 )
 
 if question and question.strip():
-    st.session_state.messages.append({
+    user_message = {
         "role": "user",
         "content": question,
-    })
+    }
+
+    append_message(
+        st.session_state.chat_id,
+        user_message,
+    )
+
+    st.session_state.messages.append(user_message)
 
     with st.chat_message("user"):
         st.text(question)
@@ -265,7 +350,18 @@ if question and question.strip():
             else:
                 render_answer(result, len(st.session_state.messages))
 
-                st.session_state.messages.append({
+                assistant_message = {
                     "role": "assistant",
                     "result": result,
-                })
+                }
+
+                append_message(
+                    st.session_state.chat_id,
+                    assistant_message,
+                )
+
+                st.session_state.messages.append(
+                    assistant_message
+                )
+
+                st.rerun()
