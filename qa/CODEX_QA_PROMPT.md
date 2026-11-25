@@ -93,7 +93,6 @@ v0.1.0 이후의 버전을 검증하는 경우
 - docs/developer-setup.md
 - docs/architecture.md
 - docs/roadmap.md
-- docs/ollama-setup.md
 
 ### Application Modules
 

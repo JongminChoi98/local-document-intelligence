@@ -34,6 +34,7 @@ Docker 및 별도의 데이터베이스 서버도 필요하지 않다.
 | Development OS | WSL2 Ubuntu | Ubuntu 26.04 LTS |
 | CPU | 8 Core | AMD Ryzen 9 8945HS |
 | RAM | 32GB | 32GB |
+| WSL RAM | Workload dependent | 15 GiB |
 | GPU | NVIDIA GPU | RTX 4060 Laptop |
 | VRAM | 8GB | 8GB |
 | Available Storage | 20GB 이상 | SSD |
@@ -351,7 +352,16 @@ Expected result:
 Cloud 기능 비활성화 및 Loopback 주소 사용은
 모든 외부 네트워크 통신 차단을 보장하지 않는다.
 
-상세 내용은 ollama-setup.md를 참고한다.
+Cloud 관련 로그는 다음 명령어로 추가 확인할 수 있다.
+
+```bash
+journalctl -u ollama -n 50 --no-pager | grep -i cloud
+```
+
+로그 출력 여부만으로 외부 통신 차단을 판단하지 않는다.
+
+Ollama 설치 중 zstd 관련 오류가 발생하면
+sudo apt install -y zstd 실행 후 설치를 재시도한다.
 
 ## 10. Install Python and Project Dependencies
 
@@ -922,8 +932,7 @@ git diff
 - [Project README](../README.md)
 - [Developer Overview](developer-overview.md)
 - [System Architecture](architecture.md)
-- [Ollama Setup](ollama-setup.md)
-- [Local LLM Validation](local-llm-validation.md)
+- [Local LLM Validation](archive/local-llm-validation.md)
 - [Development Roadmap](roadmap.md)
 
 ## Official References

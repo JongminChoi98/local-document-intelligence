@@ -8,6 +8,41 @@ built with Python, Ollama, ChromaDB, SQLite, and Streamlit.
 Version: v0.1.0
 Status: MVP / Local Prototype
 
+## Developer Documentation
+
+Start here if you are new to this project.
+
+| Step | Document | Description |
+|---|---|---|
+| 1 | [Developer Overview](docs/developer-overview.md) | Project objectives, AI technologies, and design decisions |
+| 2 | [Developer Setup Guide](docs/developer-setup.md) | Environment installation, repository setup, execution, and smoke tests |
+| 3 | [Codex QA Prompt](qa/CODEX_QA_PROMPT.md) | Independent integration testing and defect reporting |
+
+### Technical References
+
+- [System Architecture](docs/architecture.md)
+- [Development Roadmap](docs/roadmap.md)
+
+### Run QA with Codex
+
+Open this repository in Codex and provide the following instruction:
+
+> Read qa/CODEX_QA_PROMPT.md and execute the integration QA
+> procedure. Use synthetic test data and preserve the existing
+> application source code and user data.
+
+### Historical Development Records
+
+The following documents describe the initial proof of concept.
+They are not required to run the current application.
+
+- [Local LLM Validation](docs/archive/local-llm-validation.md)
+- [Open WebUI Setup](docs/archive/open-webui-setup.md)
+- [Initial RAG PoC Validation](docs/archive/rag-poc-validation.md)
+
+The original MVP source remains available under the v0.1.0 tag.
+Developer documentation added after that tag is maintained on main.
+
 ## Features
 
 - Local LLM inference using Ollama
@@ -95,15 +130,6 @@ http://127.0.0.1:8501
 | Max Output Tokens | 1024 |
 | Retrieval Top-K | 3 |
 | Embedding Model | bge-m3:567m |
-
-## Documentation
-
-- [Ollama Setup](docs/ollama-setup.md)
-- [Local LLM Validation](docs/local-llm-validation.md)
-- [Open WebUI Setup](docs/open-webui-setup.md)
-- [Initial RAG PoC Validation](docs/rag-poc-validation.md)
-- [System Architecture](docs/architecture.md)
-- [Development Roadmap](docs/roadmap.md)
 
 ## Current Limitations
 

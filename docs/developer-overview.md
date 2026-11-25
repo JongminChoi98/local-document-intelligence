@@ -462,7 +462,7 @@ Python 기반 로컬 AI 프로토타입이다.
 
 - [Project README](../README.md)
 - [System Architecture](architecture.md)
-- [Ollama Setup](ollama-setup.md)
-- [Local LLM Validation](local-llm-validation.md)
-- [Initial RAG PoC Validation](rag-poc-validation.md)
+- [Developer Setup Guide](developer-setup.md)
+- [Local LLM Validation](archive/local-llm-validation.md)
+- [Initial RAG PoC Validation](archive/rag-poc-validation.md)
 - [Development Roadmap](roadmap.md)
