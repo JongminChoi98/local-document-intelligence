@@ -5,4 +5,5 @@ description = "Local RAG system for vehicle A/S maintenance records"
 requires-python = ">=3.12.16"
 dependencies = [
     "openpyxl>=3.1.5",
+    "pypdf>=7.1.1",
 ]
