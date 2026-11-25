@@ -2,7 +2,7 @@ import argparse
 import json
 from time import perf_counter
 
-from retrieval.search import search_documents
+from retrieval.hybrid import search_hybrid
 from llm.ollama import generate_answer
 
 
@@ -56,7 +56,7 @@ def build_messages(
 def ask(question: str, top_k: int = 3) -> dict:
     started = perf_counter()
 
-    documents = search_documents(question, top_k)
+    documents = search_hybrid(question, top_k)
     retrieval_seconds = perf_counter() - started
 
     if not documents:
