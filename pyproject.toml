@@ -3,4 +3,6 @@ name = "local-document-intelligence"
 version = "0.1.0"
 description = "Local RAG system for vehicle A/S maintenance records"
 requires-python = ">=3.12.16"
-dependencies = []
+dependencies = [
+    "openpyxl>=3.1.5",
+]
