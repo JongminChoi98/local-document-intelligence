@@ -68,3 +68,13 @@ Start Open WebUI:
 Open http://localhost:8080 in a browser.
 
 See the setup guides for installation prerequisites.
+
+## RAG Proof of Concept
+
+The initial local RAG proof of concept has been completed
+using Ollama, Qwen3.5, BGE-M3, ChromaDB, and Open WebUI.
+
+- [RAG PoC Validation](docs/rag-poc-validation.md)
+
+The next phase focuses on implementing a custom
+Python-based RAG pipeline for A/S maintenance records.
