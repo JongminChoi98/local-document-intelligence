@@ -1,7 +1,8 @@
 # Local Document Intelligence — Developer Setup Guide
 
-- 기준 버전: v0.1.0
-- 기준 Commit: 3b70615
+- 초기 MVP 기준 버전: v0.1.0
+- 초기 MVP 기준 Commit: 3b70615
+- 적용 범위: main 브랜치 및 안정화 변경 사항
 - 대상 환경: Windows + WSL2 Ubuntu
 - 개발 상태: MVP / Local Prototype
 
@@ -754,12 +755,28 @@ Expected facts:
 |---|---|
 | storage/input/ | 원본 문서 |
 | storage/input/uploads/ | 웹 업로드 원본 |
-| storage/processed/ | 추출 결과 |
-| storage/normalized/ | 정규화 결과 |
-| storage/embeddings/ | Embedding JSON |
+| storage/processed/ | CLI 개별 실행 시 추출 결과 |
+| storage/normalized/ | CLI 개별 실행 시 정규화 결과 |
+| storage/embeddings/ | CLI 개별 실행 시 Embedding JSON |
 | storage/chroma/ | Vector Database |
 | storage/chat_history.db | 채팅 이력 |
 | storage/test_samples/ | 합성 테스트 문서 |
+
+웹 애플리케이션에서 문서를 등록할 때는
+파싱, 정규화, 텍스트 변환 및 Embedding을 메모리에서 처리한다.
+
+따라서 processed/, normalized/, embeddings/ 폴더는
+웹 등록 과정에서 생성되지 않을 수 있다.
+
+웹 등록 과정에서 영속적으로 저장되는 데이터는 다음과 같다.
+
+- 원본 Excel: storage/input/uploads/<uuid>/<filename>
+- 검색용 텍스트, 벡터 및 출처 정보: storage/chroma/
+- 채팅 이력: storage/chat_history.db
+
+문서 등록 실패 시 신규 원본 파일에 대한 보상 정리를 수행한다.
+DB가 참조하는 파일 또는 DB 상태를 확인할 수 없는 파일은
+데이터 손실 방지를 위해 보존한다.
 
 storage/ 전체는 Git 관리 대상에서 제외한다.
 

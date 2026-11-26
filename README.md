@@ -94,9 +94,11 @@ Developer documentation added after that tag is maintained on main.
 - BGE-M3 document embeddings
 - Persistent ChromaDB vector storage
 - Semantic and hybrid search with RRF
+- Document ID and relevance filtering
 - Document-grounded question answering
-- Conversational RAG with query rewriting
+- Conversational RAG with query rewriting and safe fallback
 - Single and batch Excel document uploads
+- Compensating cleanup for failed ingestion
 - Document listing and removal from retrieval
 - Original Excel document downloads
 - Persistent chat history using SQLite
@@ -172,6 +174,8 @@ http://127.0.0.1:8501
 | Temperature | 0.1 |
 | Max Output Tokens | 1024 |
 | Retrieval Top-K | 3 |
+| Minimum Similarity | 0.52 |
+| Maximum Similarity Gap | 0.06 |
 | Embedding Model | bge-m3:567m |
 
 ## Current Limitations
@@ -180,7 +184,8 @@ http://127.0.0.1:8501
 - Inconsistent document layouts may fail during registration.
 - PDF extraction is implemented but not integrated into retrieval.
 - OCR and image analysis are not implemented.
-- Retrieval quality has not been quantitatively evaluated.
+- Retrieval thresholds were calibrated on a small synthetic dataset.
+- Production-scale retrieval and answer quality remain unverified.
 - Alternative LLM configurations remain unverified.
 - Multi-user authentication and authorization are not implemented.
 - Full offline operation has not been verified.

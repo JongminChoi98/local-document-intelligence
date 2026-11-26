@@ -1,7 +1,8 @@
 # Local Document Intelligence — Developer Overview
 
-- 기준 버전: v0.1.0
-- 기준 Commit: 3b70615
+- 초기 MVP 기준 버전: v0.1.0
+- 초기 MVP 기준 Commit: 3b70615
+- 적용 범위: main 브랜치 및 안정화 변경 사항
 - 개발 상태: MVP / Local Prototype
 
 ## 1. 프로젝트 개요
@@ -82,13 +83,25 @@ Embedding은 텍스트를 수치 벡터로 변환하는 과정이다.
 - Dense Search: 코사인 유사도 기반 벡터 검색
 - Keyword Search: 문자열 및 키워드 일치 기반 검색
 - RRF: Reciprocal Rank Fusion을 통한 검색 순위 결합
-- Exact ID Match: 정확한 문서번호 일치 시 우선순위 적용
+- Exact ID Match: 명시된 문서번호의 정확 일치 필터링
 
 현재 Keyword Search는 단순 문자열 일치 방식이며,
 BM25 및 전용 Reranker는 적용하지 않았다.
 
-문서번호 일치는 검색 순위를 높이는 방식이며,
-해당 문서만 반환하도록 강제하는 필터는 아니다.
+명시된 문서번호는 정확히 일치하는 문서만 반환한다.
+지원하는 형식의 미등록 번호가 포함되면 검색 결과를 반환하지 않는다.
+
+일반 검색에는 다음 기준을 적용한다.
+
+- 최소 코사인 유사도: 0.52
+- 최고 유사도와의 최대 허용 차이: 0.06
+- RRF K: 60
+- 기본 Top-K: 3
+
+유사도 기준은 소규모 합성 데이터로 설정한 초기값이다.
+실제 업무 문서에 대한 추가 평가가 필요하다.
+
+관련 문서가 없으면 답변 생성 LLM을 호출하지 않는다.
 
 ### 4.5 Conversational RAG
 
@@ -102,6 +115,15 @@ BM25 및 전용 Reranker는 적용하지 않았다.
   교체한 부품은 무엇인가?
 
 재구성된 질문을 기반으로 관련 문서를 다시 검색한다.
+
+질문 재구성에 실패하면 현재 질문에 지원 형식의
+문서번호가 포함된 경우 원래 질문으로 검색한다.
+
+문서번호가 없는 경우에는 무관한 문서 검색을 방지하기 위해
+사용자에게 구체적인 질문을 다시 요청한다.
+
+답변 생성 및 질문 재구성 프롬프트는 원본의 추정 표현,
+정비 기술 용어, 부품 사양 및 질문 의도를 보존하도록 구성한다.
 
 ### 4.6 Source Reference
 
@@ -124,7 +146,8 @@ flowchart TD
     B --> C[Data Normalization]
     C --> D[Text Serialization]
     D --> E[BGE-M3 Embedding]
-    E --> F[(ChromaDB)]
+    E --> S[Save Original Excel]
+    S --> F[(ChromaDB)]
 ```
 
 1. Excel 원본에서 실제 정비 기록 시트를 선택한다.
@@ -151,9 +174,12 @@ flowchart TD
     E --> F[Dense Search]
     DB[(ChromaDB)] --> F
     DB --> G
-    F --> H[RRF and Exact ID Priority]
+    F --> H[RRF]
     G --> H
-    H --> I[Retrieved Documents]
+    H --> P[ID and Relevance Filtering]
+    P --> I[Retrieved Documents]
+    P --> N[No Matching Records]
+    N --> B
     I --> J[Context Construction]
     D --> J
     J --> K[Local LLM]
@@ -314,14 +340,23 @@ Embedding 모델이 변경될 경우에는 기존 문서의
 | Conversational RAG | 기본 동작 확인 |
 | Multi-document Question Answering | 기본 동작 확인 |
 | Excel Upload | 기본 동작 확인 |
-| Batch Document Upload | 구현 완료, 성공 경로 추가 검증 필요 |
-| Document Management | 구현 완료, 삭제 동작 추가 검증 필요 |
+| Batch Document Upload | 초기 MVP 통합 QA 동작 확인 |
+| Document Management | 초기 MVP 통합 QA 삭제 동작 확인 |
 | Original File Download | 기본 동작 확인 |
-| Persistent Chat History | 구현 완료, 세부 동작 추가 검증 필요 |
+| Persistent Chat History | 초기 MVP 통합 QA 재시작 후 복원 확인 |
 | Configurable LLM | 구현 완료, 실제 모델 교체 미검증 |
 
-전체 기능에 대한 독립적인 통합 QA 및
-정량적 정확도 검증은 아직 완료되지 않았다.
+초기 MVP에 대한 독립 통합 QA를 수행하였다.
+
+이후 답변 표현, 검색 관련성, 문서 등록 실패 정리 및
+질문 재구성 실패 처리에 대한 안정화 변경을 적용하였다.
+
+개별 집중 테스트는 통과하였으나,
+안정화 변경 전체에 대한 최종 회귀 검증은 별도로 필요하다.
+
+실제 업무 데이터 기반의 정량적 품질 평가,
+다른 생성 모델 전환 및 완전한 오프라인 동작은
+아직 충분히 검증되지 않았다.
 
 ## 11. 초기 개발 환경 및 관측 성능
 
@@ -374,7 +409,7 @@ Embedding 모델이 변경될 경우에는 기존 문서의
 ### Retrieval and Generation
 
 - 소규모 문서 집합에 최적화된 검색 구조
-- 검색 관련성 임계값 미적용
+- 초기 검색 관련성 임계값 적용, 실제 업무 데이터 기반 최적화 필요
 - BM25 및 Reranking 미적용
 - 답변 정확도 및 인용 정확도 자동 검증 미구현
 - LLM Hallucination 발생 가능성
@@ -385,14 +420,18 @@ Embedding 모델이 변경될 경우에는 기존 문서의
 - 단일 사용자 로컬 환경 기준
 - 사용자 인증 및 권한 관리 미구현
 - 문서 개정 이력 관리 미구현
-- 등록 실패 시 완전한 롤백 미구현
+- 등록 실패 시 보상 정리 적용
+- 완전한 트랜잭션 및 강제 종료 복구 미구현
 - 감사 로그 및 운영 백업 체계 미구현
 - 완전한 오프라인 동작 및 네트워크 통신 미검증
 
 ## 13. 데이터 보안 및 관리
 
-원본 문서, 검색용 데이터, Embedding 벡터,
-Vector Database 및 채팅 이력은 storage/에 저장한다.
+원본 문서, Vector Database 및 채팅 이력은
+storage/에 저장한다.
+
+웹 등록 과정의 중간 데이터는 메모리에서 처리하며,
+CLI 개별 실행 시에는 중간 산출물을 파일로 저장할 수 있다.
 
 storage/는 Git 관리 대상에서 제외한다.
 
@@ -430,7 +469,7 @@ storage/는 Git 관리 대상에서 제외한다.
 - UI/UX 개선
 - Streaming 응답
 - 문서 개정 관리
-- 등록 오류 처리 개선
+- 등록 트랜잭션 및 장애 복구 강화
 
 ### Production Readiness
 

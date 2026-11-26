@@ -42,7 +42,7 @@ maintenance document template.
 ### Retrieval and Model Optimization
 
 - BM25 and advanced keyword retrieval
-- Retrieval relevance thresholds
+- Relevance threshold evaluation and calibration
 - Metadata filtering
 - Reranking
 - Quantitative retrieval evaluation
@@ -55,7 +55,7 @@ maintenance document template.
 - Streaming responses
 - Persistent inference preferences
 - Document revision management
-- Ingestion rollback and error handling
+- Stronger ingestion consistency and crash recovery
 
 ### Production Readiness
 
