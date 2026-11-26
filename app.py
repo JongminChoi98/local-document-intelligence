@@ -150,6 +150,11 @@ def render_answer(result: dict, message_key: int):
                 st.text(f"유사도: {item['similarity']:.4f}")
                 st.divider()
 
+    if result.get("rewrite_status") == "fallback_original":
+        st.caption(
+            "질문 재구성 실패로 원래 질문의 문서번호를 사용했습니다."
+        )
+
     rewritten = result.get("rewritten_question")
 
     if rewritten and rewritten != result["question"]:

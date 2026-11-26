@@ -1,8 +1,13 @@
+import logging
 from time import perf_counter
 
 from llm.ollama import generate_answer
 from llm.settings import GenerationSettings
 from rag.pipeline import ask
+from retrieval.hybrid import DOCUMENT_ID_PATTERN, normalize
+
+
+logger = logging.getLogger(__name__)
 
 
 MAX_HISTORY_MESSAGES = 6
@@ -92,7 +97,15 @@ def rewrite_question(
 
     result = generate_answer(messages, settings)
 
-    return result["answer"].strip()
+    rewritten = result["answer"].strip()
+
+    if not rewritten:
+        raise ValueError("Empty rewritten question.")
+
+    if result.get("done_reason") == "length":
+        raise ValueError("Truncated rewritten question.")
+
+    return rewritten
 
 
 def ask_conversation(
@@ -103,10 +116,51 @@ def ask_conversation(
 ) -> dict:
     started = perf_counter()
 
-    rewritten = rewrite_question(question, history, settings)
+    if not question.strip():
+        raise ValueError("Question must not be empty.")
+
+    if top_k < 1:
+        raise ValueError("Invalid top_k.")
+
+    rewrite_status = "success" if history else "not_needed"
+
+    try:
+        rewritten = rewrite_question(
+            question, history, settings
+        )
+
+    except Exception as error:
+        logger.warning(
+            "Query rewriting failed (%s).",
+            type(error).__name__,
+        )
+
+        if DOCUMENT_ID_PATTERN.search(normalize(question)):
+            rewritten = question
+            rewrite_status = "fallback_original"
+
+        else:
+            return {
+                "question": question,
+                "rewritten_question": None,
+                "rewrite_status": "clarification_required",
+                "answer": (
+                    "이전 대화의 문맥을 처리하지 못했습니다. "
+                    "차량명 또는 문서번호를 포함하여 "
+                    "질문을 다시 입력해 주세요."
+                ),
+                "sources": [],
+                "rewrite_seconds": perf_counter() - started,
+                "retrieval_seconds": 0.0,
+                "generation_seconds": 0.0,
+                "total_seconds": perf_counter() - started,
+                "done_reason": None,
+            }
+
     rewrite_seconds = perf_counter() - started
 
     result = ask(rewritten, top_k=top_k, settings=settings)
+    result["rewrite_status"] = rewrite_status
 
     result["question"] = question
     result["rewritten_question"] = rewritten
