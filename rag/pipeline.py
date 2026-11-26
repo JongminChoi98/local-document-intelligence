@@ -101,7 +101,7 @@ def ask(
     if not documents:
         return {
             "question": question,
-            "answer": "등록된 정비 기록을 찾을 수 없습니다.",
+            "answer": "질문과 관련된 정비 기록을 찾을 수 없습니다.",
             "sources": [],
             "retrieval_seconds": retrieval_seconds,
             "generation_seconds": 0.0,

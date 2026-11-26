@@ -8,6 +8,16 @@ from vector_store.chroma import get_collection
 
 RRF_K = 60
 
+# Initial relevance thresholds calibrated on synthetic QA data.
+MIN_SIMILARITY = 0.52
+MAX_SIMILARITY_GAP = 0.06
+
+DOCUMENT_ID_PATTERN = re.compile(
+    r"(?<![a-z0-9-])"
+    r"(?:kas-\d{6}-\d+|test-as-\d+)"
+    r"(?![a-z0-9-])"
+)
+
 STOP_WORDS = {
     "알려줘", "설명해", "찾아줘",
     "정리해", "비교해", "무엇인가",
@@ -127,7 +137,46 @@ def search_hybrid(
         reverse=True,
     )
 
-    return documents[:top_k]
+    if not documents:
+        return []
+
+    requested_ids = set(
+        DOCUMENT_ID_PATTERN.findall(normalize(query))
+    )
+
+    exact_matches = [
+        doc for doc in documents
+        if doc["exact_id_match"]
+    ]
+
+    matched_ids = {
+        normalize(doc["document_id"])
+        for doc in exact_matches
+    }
+
+    # Do not substitute unrelated records for missing IDs.
+    if requested_ids and not requested_ids.issubset(matched_ids):
+        return []
+
+    # Explicit document IDs bypass semantic relevance thresholds.
+    if exact_matches:
+        return exact_matches[:top_k]
+
+    best_similarity = max(
+        doc["similarity"] for doc in documents
+    )
+
+    cutoff = max(
+        MIN_SIMILARITY,
+        best_similarity - MAX_SIMILARITY_GAP,
+    )
+
+    relevant_documents = [
+        doc for doc in documents
+        if doc["similarity"] >= cutoff
+    ]
+
+    return relevant_documents[:top_k]
 
 
 def main():
